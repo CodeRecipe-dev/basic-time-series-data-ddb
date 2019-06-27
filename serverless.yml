@@ -1,0 +1,78 @@
+service: CodeRecipe-TimeSeriesDDB
+
+provider:
+  name: aws
+  apiKeys:
+    - ${opt:stage}-timeSeriesDDB
+  usagePlan:
+    quota:
+      limit: 10000
+      offset: 0
+      period: DAY
+    throttle:
+      burstLimit: 1
+      rateLimit: 1
+  runtime: python2.7
+  stage: ${opt:stage}
+  iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:Scan
+          - dynamodb:PutItem
+        Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/#{TimeSeriesTable}"
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:Scan
+        Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/#{TimeSeriesTable}/index/*"
+
+functions:
+  CommentGetHandler:
+    handler: handler.get_data
+    events:
+      - http:
+          path: get_data
+          method: GET
+          private: true
+    environment:
+      Stage: ${self:provider.stage}
+      TIME_SERIES_TABLE: '#{TimeSeriesTable}'
+  CommentPostHandler:
+    handler: handler.add_data
+    events:
+      - http:
+          path: add_data
+          method: POST
+          private: true      
+    environment:
+      Stage: ${self:provider.stage}
+      TIME_SERIES_TABLE: '#{TimeSeriesTable}'
+
+resources:
+  Resources:
+    TimeSeriesTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        TableName: ${self:provider.stage}-TimeSeriesTable
+        AttributeDefinitions:
+          - AttributeName: date
+            AttributeType: S
+          - AttributeName: timestamp
+            AttributeType: N
+        KeySchema:
+          - AttributeName: date
+            KeyType: HASH
+          - AttributeName: timestamp
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+
+plugins:
+  - serverless-pseudo-parameters
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: false
