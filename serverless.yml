@@ -28,21 +28,21 @@ provider:
         Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/#{TimeSeriesTable}/index/*"
 
 functions:
-  CommentGetHandler:
-    handler: handler.get_data
+  RetreiveDataHandler:
+    handler: handler.retrieve_data
     events:
       - http:
-          path: get_data
+          path: retrieve_data
           method: GET
           private: true
     environment:
       Stage: ${self:provider.stage}
       TIME_SERIES_TABLE: '#{TimeSeriesTable}'
-  CommentPostHandler:
-    handler: handler.add_data
+  WriteDataHandler:
+    handler: handler.write_data
     events:
       - http:
-          path: add_data
+          path: write_data
           method: POST
           private: true      
     environment:

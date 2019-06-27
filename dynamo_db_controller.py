@@ -10,7 +10,7 @@ class DynamoDBController:
         table_name = os.environ["TIME_SERIES_TABLE"]
         self._time_series_table = self._ddb.Table(table_name)
 
-    def get_data(self, date):
+    def retrieve_data(self, date):
         response = self._time_series_table.query(
             KeyConditionExpression=Key('date').eq(date),
             ScanIndexForward=False
@@ -18,7 +18,7 @@ class DynamoDBController:
         items = response['Items']
         return items
 
-    def add_data(self, request_data):
+    def write_data(self, request_data):
         now = datetime.datetime.now()
         date = self._get_todays_date(now)
         timestamp = int(time.time()) * 1000
