@@ -10,9 +10,16 @@ class DynamoDBController:
         table_name = os.environ["TIME_SERIES_TABLE"]
         self._time_series_table = self._ddb.Table(table_name)
 
-    def retrieve_data(self, date):
+    def retrieve_data(self, request_data):
+        date = request_data['date']
+        filter_expression = None
+
+        if "transactionId" in request_data:
+            filter_expression=Key('transactionId').eq(request_data['transactionId'])
+
         response = self._time_series_table.query(
             KeyConditionExpression=Key('date').eq(date),
+            FilterExpression=filter_expression,
             ScanIndexForward=False
         )
         items = response['Items']
@@ -25,6 +32,7 @@ class DynamoDBController:
         item_data = {
             'date': date,
             'timestamp': timestamp,
+            'transactionId': request_data["transactionId"],
             'data': request_data["data"]
         }
         response = self._time_series_table.put_item(

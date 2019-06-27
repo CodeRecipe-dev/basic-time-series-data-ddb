@@ -6,10 +6,10 @@ from dynamo_db_controller import DynamoDBController
 
 def retrieve_data(event, context):
     print("received event: {}".format(json.dumps(event)))
-    date = event["queryStringParameters"]["date"]
+    request_data = event["queryStringParameters"]
     ddb = boto3.resource('dynamodb')
     _ddb_controller = DynamoDBController(ddb)
-    results = _ddb_controller.retrieve_data(date)
+    results = _ddb_controller.retrieve_data(request_data)
     response = {
         "statusCode": 200,
         "body": json.dumps(results)
